@@ -34,7 +34,7 @@ public class JenkinsTrafficLightController {
 	public static void main(String[] args) {
 
 		
-		if (args.length != 2) {
+		if (args == null || args.length != 2) {
 			log.error("You must supply a Jenkins username and api token to this program.");
 			System.exit(0);
 		}
@@ -44,7 +44,7 @@ public class JenkinsTrafficLightController {
 		final JenkinsJsonApiClient jenkins =
 						new JenkinsJsonApiClient(args[0], args[1]);
 
-		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
 		// Once a minute find the jenkins status
 		scheduler.scheduleAtFixedRate(new Runnable() {

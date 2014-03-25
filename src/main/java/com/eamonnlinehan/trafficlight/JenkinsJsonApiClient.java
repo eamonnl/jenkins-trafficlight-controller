@@ -13,11 +13,12 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.auth.BasicScheme;
@@ -25,6 +26,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -62,7 +64,19 @@ public class JenkinsJsonApiClient {
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
 						new UsernamePasswordCredentials(username, apiToken));
-		this.client = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+
+		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+		// Increase max total connection to 200
+		cm.setMaxTotal(20);
+		// Increase default max connection per route to 20
+		cm.setDefaultMaxPerRoute(20);
+
+		RequestConfig requestConfig =
+						RequestConfig.custom().setConnectTimeout(20 * 1000).setSocketTimeout(10 * 1000).build();
+
+		this.client =
+						HttpClients.custom().setDefaultCredentialsProvider(credsProvider).setConnectionManager(cm)
+										.setDefaultRequestConfig(requestConfig).build();
 
 		// Create AuthCache instance
 		AuthCache authCache = new BasicAuthCache();
@@ -83,26 +97,34 @@ public class JenkinsJsonApiClient {
 
 		log.info(request.getRequestLine());
 
-		HttpResponse response = client.execute(target, request, localContext);
-
-		JSONParser parser = new JSONParser();
-		JSONObject obj = (JSONObject) parser.parse(IOUtils.toString(response.getEntity().getContent()));
-		JSONArray jobs = (JSONArray) obj.get("jobs");
-
+		CloseableHttpResponse response = null;
 		BuildStatus status = BuildStatus.SUCCESS;
-		for (int i = 0; i < jobs.size(); i++) {
-			Object jobName = ((JSONObject) jobs.get(i)).get("name");
 
-			if (!JOBS_TO_MONITOR.contains(jobName)) continue;
+		try {
 
-			String color = (String) ((JSONObject) jobs.get(i)).get("color");
+			response = client.execute(target, request, localContext);
 
-			BuildStatus jobStatus = toJobStatus(color);
+			JSONParser parser = new JSONParser();
+			JSONObject obj = (JSONObject) parser.parse(IOUtils.toString(response.getEntity().getContent()));
+			JSONArray jobs = (JSONArray) obj.get("jobs");
 
-			status = BuildStatus.min(status, jobStatus);
+			for (int i = 0; i < jobs.size(); i++) {
+				Object jobName = ((JSONObject) jobs.get(i)).get("name");
 
-			log.info("Status for job '" + jobName + "' is " + jobStatus.name() + ". Updating return status to "
-							+ status.name());
+				if (!JOBS_TO_MONITOR.contains(jobName)) continue;
+
+				String color = (String) ((JSONObject) jobs.get(i)).get("color");
+
+				BuildStatus jobStatus = toJobStatus(color);
+
+				status = BuildStatus.min(status, jobStatus);
+
+				log.info("Status for job '" + jobName + "' is " + jobStatus.name() + ". Updating return status to "
+								+ status.name());
+			}
+
+		} finally {
+			response.close();
 		}
 
 		return status;

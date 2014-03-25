@@ -15,7 +15,7 @@ public class CommandLine {
 
 	public String execute(String[] command) throws IOException, InterruptedException {
 
-		log.info("Executing command " + StringUtils.join(command, " "));
+		log.trace("Executing command " + StringUtils.join(command, " "));
 		
 		Process process = new ProcessBuilder(command).start();
 
