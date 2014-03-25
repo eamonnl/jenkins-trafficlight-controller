@@ -38,6 +38,8 @@ import com.eamonnlinehan.trafficlight.JenkinsTrafficLightController.BuildStatus;
  * access the API on Jenkins and must use the API token configured at
  * http://build.britebill.com/jenkins/user/{admin-user}/configure
  * 
+ * TODO: Make the Jenkins server configurable
+ * 
  * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
  */
 public class JenkinsJsonApiClient {

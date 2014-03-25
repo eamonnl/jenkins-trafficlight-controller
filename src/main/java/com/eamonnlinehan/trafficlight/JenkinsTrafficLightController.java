@@ -33,10 +33,16 @@ public class JenkinsTrafficLightController {
 	 */
 	public static void main(String[] args) {
 
+		
+		if (args.length != 2) {
+			log.error("You must supply a Jenkins username and api token to this program.");
+			System.exit(0);
+		}
+		
 		final TrafficLight light = new ClewareTrafficLight();
 
 		final JenkinsJsonApiClient jenkins =
-						new JenkinsJsonApiClient("eamonnlinehan", "69cfa7b13574f541f5466e9752bd008d");
+						new JenkinsJsonApiClient(args[0], args[1]);
 
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
