@@ -8,31 +8,22 @@
 package com.eamonnlinehan.trafficlight;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 /**
  * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
  */
-public class ClewareTrafficLight implements TrafficLight {
+public class ClewareTrafficLight extends AbstractTrafficLight {
 
 	private static final Logger log = Logger.getLogger(ClewareTrafficLight.class);
-
-	private CommandLine commandLine;
+	
+	private final CommandLine commandLine;
 
 	private int deviceSerialNumber;
 	
-	private Map<Light, Boolean> lightStatus;
-
 	public ClewareTrafficLight() {
-
-		// Setup our state cache (Should prob query the device too)
-		this.lightStatus = new HashMap<Light, Boolean>();
-		for (Light light : TrafficLight.Light.values()) {
-			this.lightStatus.put(light, Boolean.FALSE);
-		}
+		super();
 		
 		this.commandLine = new CommandLine();
 
@@ -55,17 +46,7 @@ public class ClewareTrafficLight implements TrafficLight {
 		}
 
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.eamonnlinehan.trafficlight.TrafficLight#isSignalOn(com.eamonnlinehan.trafficlight.
-	 * TrafficLight.Light)
-	 */
-	public synchronized boolean isSignalOn(Light light) {
-		return this.lightStatus.get(light);
-	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -73,18 +54,22 @@ public class ClewareTrafficLight implements TrafficLight {
 	 * com.eamonnlinehan.trafficlight.TrafficLight#signalOn(com.eamonnlinehan.trafficlight.TrafficLight
 	 * .Light)
 	 */
-	public synchronized void signalOn(Light light) {
+	@Override
+	public void signalOn(Light light) {
 
 		if (isSignalOn(light))
 			return;
 		
 		try {
 			
+			log.debug("Signal on " + light.name());
+			
+			super.signalOn(light);
+			
 			commandLine.execute(new String[] {"sudo", "clewarecontrol", "-d",
 							Integer.toString(this.deviceSerialNumber), "-c", "1", "-as",
 							Integer.toString(this.getSwitchNumber(light)), "1"});
-			
-			this.lightStatus.put(light, Boolean.TRUE);
+
 
 		} catch (IOException e) {
 			log.error("Failed to change signal " + light.name() + " on.", e);
@@ -94,27 +79,30 @@ public class ClewareTrafficLight implements TrafficLight {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see com.eamonnlinehan.trafficlight.TrafficLight#signalOff(com.eamonnlinehan.trafficlight.TrafficLight.Light)
+	 */
+	@Override
 	public void signalOff(Light light) {
 		
 		if (!isSignalOn(light))
 			return;
 		
 		try {
+			
+			super.signalOff(light);
 
 			commandLine.execute(new String[] {"sudo", "clewarecontrol", "-d",
 							Integer.toString(this.deviceSerialNumber), "-c", "1", "-as",
 							Integer.toString(this.getSwitchNumber(light)), "0"});
 			
-			this.lightStatus.put(light, Boolean.FALSE);
-
 		} catch (IOException e) {
 			log.error("Failed to change signal " + light.name() + " on.", e);
 		} catch (InterruptedException e) {
 			log.error("Failed to change signal " + light.name() + " on.", e);
 		}
 	}
-
-
+	
 	private int getDeviceSerialNumber() {
 
 		String serial = null;
@@ -129,13 +117,9 @@ public class ClewareTrafficLight implements TrafficLight {
 
 			return Integer.parseInt(splitOutput[splitOutput.length - 1]);
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (IOException | InterruptedException e) {
+			log.error("Failed to read device serial number", e);
+		} 
 
 		return 0;
 	}
@@ -152,7 +136,5 @@ public class ClewareTrafficLight implements TrafficLight {
 				throw new IllegalArgumentException("Unknown traffic light led " + light.name());
 		}
 	}
-
-
-
+	
 }

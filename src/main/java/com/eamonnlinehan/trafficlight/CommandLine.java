@@ -1,3 +1,10 @@
+/*
+ * (c) Copyright 2013 Brite:Bill Ltd.
+ * 
+ * 23 Windsor Place, Dublin 2, Ireland
+ * info@britebill.com
+ * +353 1 661 9426
+ */
 package com.eamonnlinehan.trafficlight;
 
 import java.io.BufferedReader;
@@ -8,15 +15,19 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
+/**
+ * 
+ * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
+ */
 public class CommandLine {
 
-	private static final Logger log = Logger.getLogger(ClewareTrafficLight.class);
+	private static final Logger log = Logger.getLogger(CommandLine.class);
 
 
-	public String execute(String[] command) throws IOException, InterruptedException {
+	public synchronized String execute(String[] command) throws IOException, InterruptedException {
 
-		log.trace("Executing command " + StringUtils.join(command, " "));
-		
+		log.debug("Executing command " + StringUtils.join(command, " "));
+
 		Process process = new ProcessBuilder(command).start();
 
 		return this.executeProcess(process, true);
@@ -45,7 +56,7 @@ public class CommandLine {
 				stdOutBuffer.append('\n');
 			}
 			input.close();
-			
+
 			BufferedReader error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 			String errorLine = null;
 			while ((errorLine = error.readLine()) != null) {
@@ -53,9 +64,9 @@ public class CommandLine {
 				stdErrBuffer.append(" ");
 			}
 			error.close();
-			
+
 			process.waitFor();
-			
+
 			if (failOnError && process.exitValue() != 0)
 				throw new IllegalStateException("Forked process '" + process.toString() + "' exited with error code "
 								+ process.exitValue() + ". " + stdErrBuffer.toString());

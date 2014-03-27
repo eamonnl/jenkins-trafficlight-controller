@@ -54,13 +54,16 @@ public class JenkinsJsonApiClient {
 
 	private final HttpHost target;
 
-	private final HttpClientContext localContext;
+	private final AuthCache authCache;
 
 	private final CloseableHttpClient client;
 
 	public JenkinsJsonApiClient(String username, String apiToken) {
 
 		this.target = new HttpHost("build.britebill.com", 80, "http");
+		
+		log.info("Connecting to Jenkins at " + this.target.toString());
+		
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()),
 						new UsernamePasswordCredentials(username, apiToken));
@@ -79,20 +82,19 @@ public class JenkinsJsonApiClient {
 										.setDefaultRequestConfig(requestConfig).build();
 
 		// Create AuthCache instance
-		AuthCache authCache = new BasicAuthCache();
+		this.authCache = new BasicAuthCache();
 		// Generate BASIC scheme object and add it to the local
 		// auth cache
 		BasicScheme basicAuth = new BasicScheme();
 		authCache.put(target, basicAuth);
 
-		// Add AuthCache to the execution context
-		this.localContext = HttpClientContext.create();
-		localContext.setAuthCache(authCache);
-
 	}
 
 	public BuildStatus getBuildStatus() throws IllegalStateException, ParseException, IOException {
 
+		HttpClientContext localContext = HttpClientContext.create();
+		localContext.setAuthCache(authCache);
+		
 		HttpGet request = new HttpGet("/jenkins/api/json");
 
 		log.info(request.getRequestLine());
