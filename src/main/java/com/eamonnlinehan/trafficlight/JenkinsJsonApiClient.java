@@ -60,7 +60,7 @@ public class JenkinsJsonApiClient {
 
 	public JenkinsJsonApiClient(String username, String apiToken) {
 
-		this.target = new HttpHost("build.britebill.com", 80, "http");
+		this.target = new HttpHost("master.build-cluster.britebill.com", 80, "http");
 		
 		log.info("Connecting to Jenkins at " + this.target.toString());
 		
@@ -95,7 +95,7 @@ public class JenkinsJsonApiClient {
 		HttpClientContext localContext = HttpClientContext.create();
 		localContext.setAuthCache(authCache);
 		
-		HttpGet request = new HttpGet("/jenkins/api/json");
+		HttpGet request = new HttpGet("/api/json");
 
 		log.info(request.getRequestLine());
 
