@@ -23,7 +23,8 @@ public class PropertyLoader {
 		InputStream classpath = null;
 		try {
 			classpath = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
-			props.load(classpath);
+			if (classpath != null)
+				props.load(classpath);
 		} catch (IOException e) {
 			// Ignore - there may be properties on the filesystem
 		} finally {
@@ -33,7 +34,8 @@ public class PropertyLoader {
 		FileInputStream file = null;
 		try {
 			file = new FileInputStream("./" + name);
-			props.load(file);
+			if (file != null)
+				props.load(file);
 		} catch (IOException e) {
 			// Ignore error
 		} finally {
