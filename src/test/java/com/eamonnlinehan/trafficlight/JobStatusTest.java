@@ -14,8 +14,9 @@ import org.junit.Test;
 import com.eamonnlinehan.trafficlight.JenkinsTrafficLightController.BuildStatus;
 
 /**
- * Check we are correctly determining the minimum of two build status values. This is used to decide
- * what light to turn on when monitoring a group of jobs which may each have a build status.
+ * Check we are correctly determining the minimum of two build status values.
+ * This is used to decide what light to turn on when monitoring a group of jobs
+ * which may each have a build status.
  * 
  * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
  */

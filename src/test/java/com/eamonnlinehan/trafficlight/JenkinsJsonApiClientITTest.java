@@ -7,6 +7,8 @@
  */
 package com.eamonnlinehan.trafficlight;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 
 import org.json.simple.parser.ParseException;
@@ -15,17 +17,23 @@ import org.junit.Test;
 import com.eamonnlinehan.trafficlight.JenkinsTrafficLightController.BuildStatus;
 
 /**
+ * Sends a request to an actual Jenkins server to get the status of the
+ * configured jobs.
+ * 
  * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
  */
 public class JenkinsJsonApiClientITTest {
 
 	@Test
-	public void test() throws IllegalStateException, ParseException, IOException {
-		
-		JenkinsJsonApiClient jenkins = new JenkinsJsonApiClient("eamonnlinehan", "dc97c72d0d339ee169c9a290d6ac5f81");
-		
+	public void testGetBuildStatus() throws IllegalStateException, ParseException, IOException {
+
+		JenkinsJsonApiClient jenkins = new JenkinsJsonApiClient(PropertyLoader.getUrl(), PropertyLoader.getUsername(),
+				PropertyLoader.getApiToken());
+
 		BuildStatus status = jenkins.getBuildStatus();
-		
+
+		assertNotNull(status);
+
 	}
 
 }

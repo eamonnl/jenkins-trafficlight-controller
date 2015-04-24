@@ -12,6 +12,9 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 /**
+ * To control the USB device from your command line, you need the software from Cleware:
+ * http://www.cleware.net/download.html
+ * 
  * @author <a href="mailto:eamonn.linehan@britebill.com">Eamonn Linehan</a>
  */
 public class ClewareTrafficLight extends AbstractTrafficLight {
